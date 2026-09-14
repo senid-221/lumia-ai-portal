@@ -24,6 +24,9 @@ export default function Marketplace(){
  const [customer,setCustomer]=useState({name:"",phone:"",location:""});
  const [submitting,setSubmitting]=useState(false);
  const [notice,setNotice]=useState("");
+ const [partnerOpen,setPartnerOpen]=useState(false);
+ const [partner,setPartner]=useState({businessName:"",ownerName:"",phone:"",whatsappNumber:"",location:"",businessCategory:"",description:"",onlineStoreUrl:"",paymentReference:""});
+ const [partnerSubmitting,setPartnerSubmitting]=useState(false);
 
  useEffect(()=>{
   fetch(API+"/api/marketplace/products")
@@ -41,6 +44,8 @@ export default function Marketplace(){
   setSelected(null);
  };
 
+ const submitPartner=async(e:any)=>{e.preventDefault();setPartnerSubmitting(true);setNotice("");try{const r=await fetch(API+"/api/marketplace/partners/apply",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(partner)});const d=await r.json();if(!r.ok)throw new Error(d.error);setPartnerOpen(false);setPartner({businessName:"",ownerName:"",phone:"",whatsappNumber:"",location:"",businessCategory:"",description:"",onlineStoreUrl:"",paymentReference:""});setNotice("Partner application received. Pay 40,000 RWF via MOMO PAY 935237, then wait for Admin verification and approval.");}catch{setNotice("Unable to submit your partner application. Please check the information and try again.");}finally{setPartnerSubmitting(false);}};
+
  const submitOrder=async(e:any)=>{e.preventDefault(); if(!cart.length)return; setSubmitting(true); setNotice(""); try{const response=await fetch(API+"/api/marketplace/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customer_name:customer.name,phone:customer.phone,location:customer.location,items:cart,total,currency:"RWF"})}); if(!response.ok)throw new Error("Order failed"); setCart([]);setCheckout(false);setNotice("Order received successfully. LUMIA Marketplace will process your request.");setCustomer({name:"",phone:"",location:""});}catch{setNotice("Unable to send the order right now. Please try again.");}finally{setSubmitting(false);}};
 
  return <main className="market">
@@ -50,7 +55,7 @@ export default function Marketplace(){
    <a className="marketBrand" href="/"><b>L</b> LUMIA <span>MARKETPLACE</span></a>
    <button className="marketMenu" onClick={()=>setMenu(!menu)}>{menu?"Close":"Menu"}</button>
    <nav className={menu?"navOpen":""}>
-    <a href="#products">Products</a><a href="#categories">Categories</a><a href="#services">Services</a><a href="/portal/marketplace">Admin Portal</a>
+    <a href="#products">Products</a><a href="#categories">Categories</a><a href="#services">Services</a><button className="partnerNavBtn" onClick={()=>setPartnerOpen(true)}>Become a Partner</button><a href="/portal/marketplace">Admin Portal</a>
    </nav>
    <button className="cart" onClick={()=>document.getElementById("cart")?.scrollIntoView({behavior:"smooth"})}><ShoppingCart size={18}/> Cart ({cart.length})</button>
   </header>
@@ -77,6 +82,8 @@ export default function Marketplace(){
     })}
    </div>
   </section>
+
+  <section className="partnerBanner"><div><p className="eyebrow">GROW WITH LUMIA</p><h2>Do you own a shop or business?</h2><p>Join LUMIA Marketplace as a Partner. After Admin approval, your business and products can be connected to LUMIA AI to help customers discover what you sell.</p><button onClick={()=>setPartnerOpen(true)}>Become a LUMIA Partner <ArrowRight size={18}/></button></div><div className="partnerSteps"><span>01<br/><b>Apply</b></span><span>02<br/><b>Admin verifies</b></span><span>03<br/><b>Get approved</b></span><span>04<br/><b>Receive customer orders</b></span></div></section>
 
   <section className="marketPromo"><div><p className="eyebrow">LUMIA AI SHOPPING ASSISTANT</p><h2>Not sure what to buy?</h2><p>Ask LUMIA AI on WhatsApp and get help finding the right product and its exact marketplace link.</p><a className="promoBtn" href="#products">Browse products <ArrowRight size={17}/></a></div><div className="promoVisual"><ShoppingCart size={80}/><span>SMART SHOPPING</span></div></section>
 
@@ -115,6 +122,8 @@ export default function Marketplace(){
   </section>
 
   <footer>© 2026 LUMIA Marketplace · Connected to LUMIA AI Portal & Backend</footer>
+
+  {partnerOpen&&<div className="productModal" onClick={()=>setPartnerOpen(false)}><form className="modalCard partnerModal" onClick={e=>e.stopPropagation()} onSubmit={submitPartner}><button type="button" className="modalClose" onClick={()=>setPartnerOpen(false)}><X/></button><div className="partnerForm"><p className="eyebrow">LUMIA MARKETPLACE PARTNER</p><h2>Partner Application</h2><p className="partnerIntro">Registration fee: <b>40,000 RWF</b> · Payment: <b>MOMO PAY 935237</b></p><div className="partnerFields">{[["businessName","Business name"],["ownerName","Owner name"],["phone","Phone number"],["whatsappNumber","WhatsApp number"],["location","Shop location"],["businessCategory","Business category"],["onlineStoreUrl","Online store URL (optional)"],["paymentReference","MOMO payment reference (after payment)"]].map(([key,label])=><label key={key}>{label}<input required={!String(key).includes("Url")&&!String(key).includes("Reference")} value={(partner as any)[key]} onChange={e=>setPartner({...partner,[key]:e.target.value})}/></label>)}</div><label>About your business<textarea value={partner.description} onChange={e=>setPartner({...partner,description:e.target.value})} placeholder="Tell LUMIA about your shop, products and services."/></label><div className="partnerPayment">Pay the 40,000 RWF registration fee to <strong>MOMO PAY: 935237</strong>. Admin will verify the payment and application before approval.</div><button className="modalBuy" disabled={partnerSubmitting}>{partnerSubmitting?"Submitting application...":"Submit Partner Application"} <ArrowRight size={18}/></button></div></form></div>}
 
   {checkout&&<div className="productModal" onClick={()=>setCheckout(false)}><form className="modalCard checkoutCard" onClick={e=>e.stopPropagation()} onSubmit={submitOrder}><button type="button" className="modalClose" onClick={()=>setCheckout(false)}><X/></button><div className="checkoutContent"><p className="eyebrow">SECURE ORDER REQUEST</p><h2>Checkout</h2><p>Enter your details so LUMIA Marketplace can process your order.</p><label>Full name<input required value={customer.name} onChange={e=>setCustomer({...customer,name:e.target.value})} placeholder="Your full name"/></label><label>Phone number<input required value={customer.phone} onChange={e=>setCustomer({...customer,phone:e.target.value})} placeholder="+250..."/></label><label>Location / Address<input required value={customer.location} onChange={e=>setCustomer({...customer,location:e.target.value})} placeholder="Your location"/></label><div className="checkoutSummary"><strong>{cart.length} product(s)</strong><strong>{total.toLocaleString()} RWF</strong></div><button className="modalBuy" disabled={submitting}>{submitting?"Sending order...":"Place order"} <ArrowRight size={18}/></button></div></form></div>}
 
