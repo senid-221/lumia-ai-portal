@@ -20,6 +20,10 @@ export default function Marketplace(){
  const [menu,setMenu]=useState(false);
  const [cart,setCart]=useState<any[]>([]);
  const [selected,setSelected]=useState<any>(null);
+ const [checkout,setCheckout]=useState(false);
+ const [customer,setCustomer]=useState({name:"",phone:"",location:""});
+ const [submitting,setSubmitting]=useState(false);
+ const [notice,setNotice]=useState("");
 
  useEffect(()=>{
   fetch(API+"/api/marketplace/products")
@@ -36,6 +40,8 @@ export default function Marketplace(){
   setCart(items=>items.some(x=>x.id===product.id)?items:[...items,product]);
   setSelected(null);
  };
+
+ const submitOrder=async(e:any)=>{e.preventDefault(); if(!cart.length)return; setSubmitting(true); setNotice(""); try{const response=await fetch(API+"/api/marketplace/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customer_name:customer.name,phone:customer.phone,location:customer.location,items:cart,total,currency:"RWF"})}); if(!response.ok)throw new Error("Order failed"); setCart([]);setCheckout(false);setNotice("Order received successfully. LUMIA Marketplace will process your request.");setCustomer({name:"",phone:"",location:""});}catch{setNotice("Unable to send the order right now. Please try again.");}finally{setSubmitting(false);}};
 
  return <main className="market">
   <div className="marketTopbar">Quality products · Trusted services · LUMIA Marketplace</div>
@@ -91,7 +97,7 @@ export default function Marketplace(){
 
   <section id="cart" className="cartSection">
    <div><p className="eyebrow">YOUR ORDER</p><h2>Shopping cart</h2></div>
-   {cart.length===0?<p className="cartEmpty">Your cart is empty. Choose a product to start your order.</p>:<div className="cartList">{cart.map(item=><div key={item.id} className="cartItem"><img src={item.image_url||fallbackProducts[0].image_url} alt=""/><div><strong>{item.name}</strong><span>{Number(item.price||0).toLocaleString()} {item.currency||"RWF"}</span></div><button onClick={()=>setCart(x=>x.filter(p=>p.id!==item.id))}><X size={18}/></button></div>)}<div className="cartTotal"><strong>Total: {total.toLocaleString()} RWF</strong><button onClick={()=>alert("Your order request has been prepared. The next step is connecting checkout and payment.")}>Continue to checkout</button></div></div>}
+   {cart.length===0?<p className="cartEmpty">Your cart is empty. Choose a product to start your order.</p>:<div className="cartList">{cart.map(item=><div key={item.id} className="cartItem"><img src={item.image_url||fallbackProducts[0].image_url} alt=""/><div><strong>{item.name}</strong><span>{Number(item.price||0).toLocaleString()} {item.currency||"RWF"}</span></div><button onClick={()=>setCart(x=>x.filter(p=>p.id!==item.id))}><X size={18}/></button></div>)}<div className="cartTotal"><strong>Total: {total.toLocaleString()} RWF</strong><button onClick={()=>setCheckout(true)}>Continue to checkout</button></div></div>}
   </section>
 
   <section id="services" className="services">
@@ -104,6 +110,10 @@ export default function Marketplace(){
   </section>
 
   <footer>© 2026 LUMIA Marketplace · Connected to LUMIA AI Portal & Backend</footer>
+
+  {checkout&&<div className="productModal" onClick={()=>setCheckout(false)}><form className="modalCard checkoutCard" onClick={e=>e.stopPropagation()} onSubmit={submitOrder}><button type="button" className="modalClose" onClick={()=>setCheckout(false)}><X/></button><div className="checkoutContent"><p className="eyebrow">SECURE ORDER REQUEST</p><h2>Checkout</h2><p>Enter your details so LUMIA Marketplace can process your order.</p><label>Full name<input required value={customer.name} onChange={e=>setCustomer({...customer,name:e.target.value})} placeholder="Your full name"/></label><label>Phone number<input required value={customer.phone} onChange={e=>setCustomer({...customer,phone:e.target.value})} placeholder="+250..."/></label><label>Location / Address<input required value={customer.location} onChange={e=>setCustomer({...customer,location:e.target.value})} placeholder="Your location"/></label><div className="checkoutSummary"><strong>{cart.length} product(s)</strong><strong>{total.toLocaleString()} RWF</strong></div><button className="modalBuy" disabled={submitting}>{submitting?"Sending order...":"Place order"} <ArrowRight size={18}/></button></div></form></div>}
+
+  {notice&&<div className="marketNotice">{notice}</div>}
 
   {selected&&<div className="productModal" onClick={()=>setSelected(null)}>
    <div className="modalCard" onClick={e=>e.stopPropagation()}>
