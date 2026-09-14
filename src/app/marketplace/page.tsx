@@ -44,10 +44,10 @@ export default function Marketplace(){
  const submitOrder=async(e:any)=>{e.preventDefault(); if(!cart.length)return; setSubmitting(true); setNotice(""); try{const response=await fetch(API+"/api/marketplace/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customer_name:customer.name,phone:customer.phone,location:customer.location,items:cart,total,currency:"RWF"})}); if(!response.ok)throw new Error("Order failed"); setCart([]);setCheckout(false);setNotice("Order received successfully. LUMIA Marketplace will process your request.");setCustomer({name:"",phone:"",location:""});}catch{setNotice("Unable to send the order right now. Please try again.");}finally{setSubmitting(false);}};
 
  return <main className="market">
-  <div className="marketTopbar">Quality products · Trusted services · LUMIA Marketplace</div>
+  <div className="marketTopbar"><span>🚚 Fast ordering support</span><span>✓ Trusted Marketplace</span><span>📱 Order through LUMIA AI</span></div>
 
   <header className="marketHeader">
-   <a className="marketBrand" href="/">LUMIA <span>MARKET</span></a>
+   <a className="marketBrand" href="/"><b>L</b> LUMIA <span>MARKETPLACE</span></a>
    <button className="marketMenu" onClick={()=>setMenu(!menu)}>{menu?"Close":"Menu"}</button>
    <nav className={menu?"navOpen":""}>
     <a href="#products">Products</a><a href="#categories">Categories</a><a href="#services">Services</a><a href="/portal/marketplace">Admin Portal</a>
@@ -55,18 +55,19 @@ export default function Marketplace(){
    <button className="cart" onClick={()=>document.getElementById("cart")?.scrollIntoView({behavior:"smooth"})}><ShoppingCart size={18}/> Cart ({cart.length})</button>
   </header>
 
-  <section className="marketHero">
+  <section className="marketHero"><div className="heroGlow"></div>
    <div>
-    <p className="eyebrow">LUMIA SERVICES PROVIDER</p>
-    <h1>Everything you need, in one trusted marketplace.</h1>
-    <p>Discover technology, fashion, home essentials and professional digital services through the LUMIA ecosystem.</p>
-    <a href="#products" className="shopBtn">Explore products <ArrowRight size={18}/></a>
+    <p className="eyebrow">THE SMART WAY TO SHOP</p>
+    <h1>Find what you need.<br/><em>Shop with confidence.</em></h1>
+    <p>Technology, fashion, home essentials and professional services — all connected through one LUMIA marketplace.</p>
+    <div className="heroActions"><a href="#products" className="shopBtn">Shop now <ArrowRight size={18}/></a><a href="#services" className="heroLink">Explore services</a></div>
+    <div className="heroStats"><span><b>Real</b> products</span><span><b>Easy</b> ordering</span><span><b>AI</b> assistance</span></div>
    </div>
    <div className="heroPhoto"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=85" alt="LUMIA Marketplace"/></div>
   </section>
 
   <section id="categories" className="categorySection">
-   <p className="eyebrow">DISCOVER MORE</p><h2>Shop by category</h2>
+   <div className="sectionIntro"><div><p className="eyebrow">SHOP YOUR WAY</p><h2>Explore popular categories</h2></div><p>Choose a category and discover products selected for everyday life, work and business.</p></div>
    <div className="categoryGrid">
     {productCategories.map((name:any)=>{
      const Icon=icons[name]||ShoppingCart;
@@ -77,9 +78,11 @@ export default function Marketplace(){
    </div>
   </section>
 
+  <section className="marketPromo"><div><p className="eyebrow">LUMIA AI SHOPPING ASSISTANT</p><h2>Not sure what to buy?</h2><p>Ask LUMIA AI on WhatsApp and get help finding the right product and its exact marketplace link.</p><a className="promoBtn" href="#products">Browse products <ArrowRight size={17}/></a></div><div className="promoVisual"><ShoppingCart size={80}/><span>SMART SHOPPING</span></div></section>
+
   <section id="products" className="productsSection">
    <div className="sectionHead">
-    <div><p className="eyebrow">REAL PRODUCTS</p><h2>Featured marketplace</h2></div>
+    <div><p className="eyebrow">LATEST COLLECTION</p><h2>Featured products</h2></div>
     <div className="searchBox"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search products..."/></div>
    </div>
    <div className="productGrid">
@@ -94,6 +97,8 @@ export default function Marketplace(){
    </div>
    {!visible.length&&<div className="emptyProducts">No products found. Try another search.</div>}
   </section>
+
+  <section className="trustStrip"><div>✓ Quality products</div><div>🔒 Simple order process</div><div>💬 LUMIA AI assistance</div><div>📦 Marketplace order tracking</div></section>
 
   <section id="cart" className="cartSection">
    <div><p className="eyebrow">YOUR ORDER</p><h2>Shopping cart</h2></div>
