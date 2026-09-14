@@ -1,0 +1,24 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash2, Package, ShoppingBag, X } from "lucide-react";
+
+const API="https://lumia-whatsapp-agent.onrender.com";
+const empty={name:"",category:"Clothing",description:"",price:"",currency:"RWF",imageUrl:""};
+
+export default function MarketplaceAdmin(){
+ const [products,setProducts]=useState<any[]>([]); const [orders,setOrders]=useState<any[]>([]);
+ const [form,setForm]=useState<any>(empty); const [editing,setEditing]=useState<any>(null); const [open,setOpen]=useState(false);
+ async function load(){const [p,o]=await Promise.all([fetch(API+"/api/marketplace/products").then(r=>r.json()),fetch(API+"/api/portal/marketplace/orders").then(r=>r.json())]);setProducts(p.products||[]);setOrders(o.orders||[])}
+ useEffect(()=>{load()},[]);
+ async function save(e:any){e.preventDefault();const method=editing?"PUT":"POST";const url=editing?API+"/api/portal/marketplace/products/"+editing.id:API+"/api/portal/marketplace/products";await fetch(url,{method,headers:{"Content-Type":"application/json"},body:JSON.stringify({...form,price:Number(form.price||0)})});setOpen(false);setEditing(null);setForm(empty);load()}
+ async function remove(id:number){if(confirm("Delete this product?")){await fetch(API+"/api/portal/marketplace/products/"+id,{method:"DELETE"});load()}}
+ async function status(id:number,status:string){await fetch(API+"/api/portal/marketplace/orders/"+id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({status})});load()}
+ return <main className="adminMarket"><header className="adminMarketHeader"><div><p className="eyebrow">LUMIA PORTAL</p><h1>Marketplace Management</h1></div><a href="/marketplace">View Public Store →</a></header>
+ <section className="adminStats"><div><Package/><span><small>Products</small><strong>{products.length}</strong></span></div><div><ShoppingBag/><span><small>Orders</small><strong>{orders.length}</strong></span></div><div><ShoppingBag/><span><small>Pending</small><strong>{orders.filter(o=>o.status==="pending").length}</strong></span></div></section>
+ <section className="adminBlock"><div className="adminTitle"><div><h2>Products</h2><p>Manage products shown on the public marketplace.</p></div><button onClick={()=>{setEditing(null);setForm(empty);setOpen(true)}}><Plus size={18}/> Add Product</button></div>
+ <div className="adminTableWrap"><table><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>{products.map(p=><tr key={p.id}><td className="productCell">{p.image_url&&<img src={p.image_url} alt={p.name}/>}<strong>{p.name}</strong></td><td>{p.category}</td><td>{Number(p.price).toLocaleString()} {p.currency}</td><td>{p.in_stock?"Available":"Hidden"}</td><td><button className="iconBtn" onClick={()=>{setEditing(p);setForm({name:p.name,category:p.category,description:p.description||"",price:String(p.price),currency:p.currency,imageUrl:p.image_url||""});setOpen(true)}}><Pencil size={16}/></button><button className="iconBtn danger" onClick={()=>remove(p.id)}><Trash2 size={16}/></button></td></tr>)}</tbody></table></div></section>
+ <section className="adminBlock"><div className="adminTitle"><div><h2>Customer Orders</h2><p>Orders coming from the public LUMIA Market.</p></div></div><div className="ordersGrid">{orders.map(o=><article className="orderCard" key={o.id}><div><span className={"orderStatus "+o.status}>{o.status}</span><h3>{o.product_name||"Product"}</h3><p>{o.customer_name} · {o.phone}</p><small>{new Date(o.created_at).toLocaleString()}</small></div><select value={o.status} onChange={e=>status(o.id,e.target.value)}><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="rejected">Rejected</option><option value="completed">Completed</option></select></article>)}</div></section>
+ {open&&<div className="modalBg"><form className="productModal" onSubmit={save}><button type="button" className="closeModal" onClick={()=>setOpen(false)}><X/></button><h2>{editing?"Edit Product":"Add Product"}</h2>{[["name","Product name"],["category","Category"],["price","Price"],["currency","Currency"],["imageUrl","Real image URL"]].map(([k,l])=><label key={k}>{l}<input required={k==="name"||k==="category"} value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></label>)}<label>Description<textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><button className="saveProduct">Save Product</button></form></div>}
+ </main>
+}
